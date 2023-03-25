@@ -9,6 +9,7 @@ import { AuthenticationContext } from "../../features/authentication/authenticat
 import { child, get, onValue, ref } from "@firebase/database";
 import { db } from "../../../Firebase";
 import moment from "moment/moment";
+import { ProfilesContext } from "../../features/Profiles/ProfilesContext";
 
 const Header = styled(View)`
   height: 15%;
@@ -31,6 +32,7 @@ export default function MainScreen({ navigation }) {
   const { localUsers } = useContext(UserInfoContext);
   const { user, onLogout } = useContext(AuthenticationContext);
   const [chats, setChats] = useState([]);
+  const {getChatUrl}=useContext(ProfilesContext)
 
   const currentUser = localUsers.find(
     (localUser) => localUser.number === user.phoneNumber
@@ -46,53 +48,65 @@ export default function MainScreen({ navigation }) {
     );
     const lastMessage = getLastConvo(conversation);
     const formattedTime = moment(lastMessage.createdAt).format("HH:mm");
-
     const chat = {
       name: otherUser.name,
       conversation,
       lastConvo: lastMessage.text,
       time: formattedTime,
+      number:otherUser.number
     };
-
     return chat;
   };
   
   const getLastConvo = (conversation) => {
-    let lastMessage = {};
+    let lastMessage = { text: "" };
     const messagesRef = ref(db, conversation);
     const handleData = (snapshot) => {
       const messageList = [];
       snapshot.forEach((child) => {
         messageList.push(child.val());
       });
-
-      lastMessage = messageList.reverse()[0];
-      setChats((prevChats) => {
-        const newChats = [...prevChats];
-        const chatIndex = newChats.findIndex(
-          (chat) => chat.conversation === conversation
-        );
-        newChats[chatIndex] = {
-          ...newChats[chatIndex],
-          lastConvo: lastMessage.text,
-          time: moment(lastMessage.createdAt).format("HH:mm"),
-        };
-        return newChats;
-      });
+  
+      if (messageList.length > 0) {
+        lastMessage = messageList.reverse()[0];
+        setChats((prevChats) => {
+          const newChats = [...prevChats];
+          const chatIndex = newChats.findIndex(
+            (chat) => chat.conversation === conversation
+          );
+          newChats[chatIndex] = {
+            ...newChats[chatIndex],
+            lastConvo: lastMessage.text,
+            time: moment(lastMessage.createdAt).format("HH:mm"),
+          };
+          return newChats;
+        });
+      }
     };
     onValue(messagesRef, handleData);
-
+  
     return lastMessage;
   };
   
+  
   useEffect(() => {
     if (currentUser) {
+      getChatUrl(user.phoneNumber)
       const newChats = currentUser.conversations.map((conversation) => {
         return getChat(conversation);
       });
       setChats(newChats);
+
     }
   }, [localUsers, currentUser]);
+
+  useEffect(()=>{
+      chats.forEach((chat)=>{
+        getChatUrl(chat.number)
+      })
+  },[chats])
+
+  
 
   return (
     <>
@@ -116,6 +130,7 @@ export default function MainScreen({ navigation }) {
                 name={chat.name}
                 lastConvo={chat.lastConvo}
                 time={chat.time}
+                number={chat.number}
               />
             );
           })}

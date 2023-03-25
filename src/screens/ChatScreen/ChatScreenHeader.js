@@ -4,6 +4,8 @@ import { Text } from "../../infrastructure/components/typography/Text";
 import { Image } from "react-native";
 import { IconButton } from "react-native-paper";
 import styled from "styled-components";
+import ProfilePhoto from "../../components/ChatCard/ProfilePhoto";
+import { Spacer } from "../../infrastructure/components/spacer/spacer";
 
 const Header = styled(View)`
   position: absolute;
@@ -35,7 +37,7 @@ const Pressers = styled(IconButton)`
   border-radius: 5px;
 `;
 
-export default function ChatScreenHeader({navigation,name}) {
+export default function ChatScreenHeader({navigation,name,number}) {
   return (
     
     <Header>
@@ -43,11 +45,8 @@ export default function ChatScreenHeader({navigation,name}) {
         <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
       <Pressers icon="arrow-left" iconColor="rgb(32,220,119)" style={{backgroundColor:null,height:18,width:18}} size={18} onPress={()=>navigation.navigate("Main")} />
             
-      <Profile
-        source={{
-          uri: "https://www.shutterstock.com/image-vector/male-avatar-profile-picture-vector-600w-149083895.jpg",
-        }}
-      />
+      <ProfilePhoto size={40} number={number} />
+      <Spacer position="right" size="medium" />
       <Text variant="name">{name}</Text>
       </View>
       <View style={{flexDirection:"row",justifyContent:"space-evenly"}}>

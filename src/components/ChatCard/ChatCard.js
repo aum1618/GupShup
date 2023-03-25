@@ -3,6 +3,7 @@ import React from "react";
 import { Card } from "react-native-paper";
 import { Text } from "../../infrastructure/components/typography/Text";
 import styled from "styled-components";
+import ProfilePhoto from "./ProfilePhoto";
 
 const Message = styled(Text)`
   color: ${(props) => props.theme.colors.text.secondary};
@@ -26,16 +27,15 @@ const MessageView = styled(View)`
   margin-right: 10px;
 `;
 
-export default function ChatCard({navigation,conversationId,name,lastConvo,time}) {
+export default function ChatCard({navigation,conversationId,name,lastConvo,time,number}) {
+  
+  
+  
   return (
 
-    <Chat mode="contained" onPress={()=>navigation.navigate("Chat",{ChatId:conversationId,chatName:name})} >
+    <Chat mode="contained" onPress={()=>navigation.navigate("Chat",{ChatId:conversationId,chatName:name,number:number})} >
       <ChatContent>
-        <Profile
-          source={{
-            uri: "https://www.shutterstock.com/image-vector/male-avatar-profile-picture-vector-600w-149083895.jpg",
-          }}
-        />
+        <ProfilePhoto number={number} size={64} />
         <MessageView>
           <Text variant="label">{name}</Text>
           <Message variant="body" numberOfLines={2}>

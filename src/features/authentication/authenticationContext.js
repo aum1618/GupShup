@@ -19,13 +19,11 @@ export const AuthenticationContextProvider = ({ children }) => {
   const recaptchaVerifier = useRef(null);
   const firebaseConfig = appOptions;
   const [verificationId, setVerificationId] = useState();
-  const [codeSent,setCodeSent]=useState(false)
-
+  const [codeSent, setCodeSent] = useState(false);
 
   const onLogin = async (phoneNumber) => {
     try {
-
-      setIsLoading(true)
+      setIsLoading(true);
       const phoneProvider = new PhoneAuthProvider(auth);
       const verificationId = await phoneProvider.verifyPhoneNumber(
         phoneNumber,
@@ -33,26 +31,26 @@ export const AuthenticationContextProvider = ({ children }) => {
       );
       setVerificationId(verificationId);
       console.log("Verification code has been sent to your phone.");
-      setIsLoading(false)
-      setCodeSent(true)
+      setIsLoading(false);
+      setCodeSent(true);
     } catch (err) {
       console.log(`Error: ${err}`);
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
 
   const confirmCode = async (code) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const credential = PhoneAuthProvider.credential(verificationId, code);
       await signInWithCredential(auth, credential);
       console.log("Phone authentication successful 👍");
-      setCodeSent(false)
-      setIsLoading(false)
+      setCodeSent(false);
+      setIsLoading(false);
     } catch (err) {
       console.log(`Error: ${err}`);
-      setIsLoading(false)
-      setCodeSent(false)
+      setIsLoading(false);
+      setCodeSent(false);
     }
   };
 
@@ -67,17 +65,17 @@ export const AuthenticationContextProvider = ({ children }) => {
   };
 
   const onLogout = () => {
-    setIsLoading(true)
+    setIsLoading(true);
     signOut(auth)
       .then(() => {
         setUser(null);
         AsyncStorage.removeItem(`@loggedUser`);
         console.log("no user logged in!");
-        setIsLoading(false)
+        setIsLoading(false);
       })
       .catch((e) => {
         setError(e.message);
-        setIsLoading(false)
+        setIsLoading(false);
       });
   };
 
@@ -88,37 +86,33 @@ export const AuthenticationContextProvider = ({ children }) => {
       if (JsonValue != null) {
         await setUser(JSON.parse(JsonValue));
         console.log(`user set`);
-      
-        setIsLoading(false)
-        
 
-      }else setIsLoading(false)
+        setIsLoading(false);
+      } else setIsLoading(false);
     } catch (e) {
       console.log(e);
       setIsLoading(false);
-    } }
-  
-    useEffect(()=>{
-    getLoggedUser()
-  },[])
-  
-  
+    }
+  };
+
+  useEffect(() => {
+    getLoggedUser();
+  }, []);
+
   useEffect(() => {
     console.log(`user is ${user}`);
-
   }, [user]);
-    onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, (user) => {
     if (user) {
       setUser(user);
       setLoggedUser();
-    } 
-    
+    }
   });
 
   return (
     <AuthenticationContext.Provider
       value={{
-        isAuthenticated:!!user,
+        isAuthenticated: !!user,
         isLoading,
         user,
         error,
@@ -128,7 +122,7 @@ export const AuthenticationContextProvider = ({ children }) => {
         getLoggedUser,
         recaptchaVerifier,
         firebaseConfig,
-        codeSent
+        codeSent,
       }}
     >
       {children}

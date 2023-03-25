@@ -7,6 +7,7 @@ import { AuthenticationContext } from "../authentication/authenticationContext";
 import { UserInfoContext } from "../userInfo/UserInfoContext";
 import NewConversationScreen from "../../screens/NewConversationScreen/NewConversationScreen";
 import VoiceCallingScreen from "../../screens/VoiceCallingScreen/VoiceCallingScreen";
+import NewUserScreenNavigator from "./NewUserScreenNavigator";
 
 const Stack = createStackNavigator();
 
@@ -30,7 +31,7 @@ export default function MainStackNavigator() {
       {!isPrevUser ? (
         <Stack.Screen
           name="NewUser"
-          component={() => <NewUserDetailsScreen setPrev={setIsPrevUser} />}
+          component={() => <NewUserScreenNavigator setPrev={setIsPrevUser} />}
         />
       ) : (
         <Stack.Screen name="Main" component={MainScreen} />

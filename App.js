@@ -12,6 +12,7 @@ import Index from "./src/features/navigation";
 
 import { AuthenticationContextProvider } from "./src/features/authentication/authenticationContext";
 import { UserInfoContextProvider } from "./src/features/userInfo/UserInfoContext";
+import { ProfilesContextProvider } from "./src/features/Profiles/ProfilesContext";
 
 export default function App() {
   const [oswaldLoaded] = useOswald({
@@ -28,6 +29,7 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
+      <ProfilesContextProvider>
       <AuthenticationContextProvider>
         <UserInfoContextProvider>
         <Wrapper>
@@ -38,6 +40,7 @@ export default function App() {
         </Wrapper>
         </UserInfoContextProvider>
       </AuthenticationContextProvider>
+      </ProfilesContextProvider>
     </ThemeProvider>
   );
 }
