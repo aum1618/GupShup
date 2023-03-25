@@ -9,7 +9,7 @@ export default function Index() {
   console.log(user)
   return (
     <NavigationContainer>
-        {isAuthenticated  ? <MainStackNavigator /> : <AccountNavigator /> }
+        {isAuthenticated ? <MainStackNavigator /> : <AccountNavigator /> }
     </NavigationContainer>
   )
 }

@@ -1,6 +1,6 @@
 import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import React, { useContext, useState } from "react";
-import { ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, TouchableOpacity } from "react-native";
 import { AuthenticationContext } from "../../features/authentication/authenticationContext";
 import { Spacer } from "../../infrastructure/components/spacer/spacer";
 import { Text } from "../../infrastructure/components/typography/Text";
@@ -11,7 +11,6 @@ import {
   AuthButton,
   Title,
 } from "./AccountStyles";
-
 export const LoginScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [code, setCode] = useState("");

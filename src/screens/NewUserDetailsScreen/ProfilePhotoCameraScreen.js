@@ -34,10 +34,10 @@ export const CameraScreen = ({navigation}) => {
       AsyncStorage.setItem(`${user.uid}-photo`,photo.uri)
       const blob = await response.blob();
       const storageRef = ref(storage, `${user.phoneNumber}-photo`);
+      navigation.goBack();
       await uploadBytes(storageRef, blob).then((snapshot) => {
         console.log('Uploaded a blob or file!');
       });
-      navigation.goBack();
     }
   };
 

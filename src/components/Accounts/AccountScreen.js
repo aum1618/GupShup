@@ -11,14 +11,14 @@ import {
 } from "./AccountStyles";
 
 export const AccountsScreen = ({ navigation }) => {
-  const { isLoading } = useContext(AuthenticationContext);
+  const { isLoading,} = useContext(AuthenticationContext);
   return (
     <AccountBackground>
       <Title>GupShup</Title>
       
 
       <AccountContainer>
-        {!isLoading?<AuthButton
+        {!isLoading ?<AuthButton
           icon="lock-open-outline"
           mode="contained"
           onPress={() => {

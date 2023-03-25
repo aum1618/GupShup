@@ -13,13 +13,15 @@ export const AuthenticationContext = createContext();
 
 export const AuthenticationContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isScreenLoading, setIsScreenLoading] = useState(false);
+  const [fromLogin, setFromLogin] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState();
   const recaptchaVerifier = useRef(null);
   const firebaseConfig = appOptions;
   const [verificationId, setVerificationId] = useState();
   const [codeSent, setCodeSent] = useState(false);
+
+
 
   const onLogin = async (phoneNumber) => {
     try {
@@ -46,6 +48,7 @@ export const AuthenticationContextProvider = ({ children }) => {
       await signInWithCredential(auth, credential);
       console.log("Phone authentication successful 👍");
       setCodeSent(false);
+      setFromLogin(true)
       setIsLoading(false);
     } catch (err) {
       console.log(`Error: ${err}`);
@@ -85,9 +88,8 @@ export const AuthenticationContextProvider = ({ children }) => {
       const JsonValue = await AsyncStorage.getItem(`@loggedUser`);
       if (JsonValue != null) {
         await setUser(JSON.parse(JsonValue));
-        console.log(`user set`);
-
-        setIsLoading(false);
+        console.log(`user set`)
+       !isPrevLoading && setIsLoading(false);
       } else setIsLoading(false);
     } catch (e) {
       console.log(e);
@@ -123,6 +125,7 @@ export const AuthenticationContextProvider = ({ children }) => {
         recaptchaVerifier,
         firebaseConfig,
         codeSent,
+        fromLogin,
       }}
     >
       {children}

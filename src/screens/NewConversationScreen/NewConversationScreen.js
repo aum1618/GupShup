@@ -12,7 +12,7 @@ export default function NewConversationScreen({navigation}) {
 
   const HandlePress=async()=>{
     const ChatId=await addNewConversation(number)
-    navigation.navigate("Chat",{ChatId:ChatId})
+    navigation.navigate("Main",{ChatId:ChatId})
 
   }
 

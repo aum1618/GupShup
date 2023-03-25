@@ -33,6 +33,7 @@ export default function MainScreen({ navigation }) {
   const { user, onLogout } = useContext(AuthenticationContext);
   const [chats, setChats] = useState([]);
   const {getChatUrl}=useContext(ProfilesContext)
+  
 
   const currentUser = localUsers.find(
     (localUser) => localUser.number === user.phoneNumber
