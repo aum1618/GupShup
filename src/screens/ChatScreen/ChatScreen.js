@@ -26,6 +26,9 @@ export function ChatScreen({ navigation, route }) {
     const handleData = (snapshot) => {
       const messageList = [];
       snapshot.forEach((child) => {
+        if(child.val().user._id !== user.uid){
+          set(ref(db, `${ChatId}/${child.key}`), { ...child.val(), received: true });
+    }
         messageList.push(child.val());
       });
       setMessages(messageList.reverse());
@@ -76,6 +79,8 @@ export function ChatScreen({ navigation, route }) {
       return {
         ...message,
         createdAt: message.createdAt.toISOString(),
+        sent:true,
+        received:false,
       };
     });
     const messagesRef = ref(db, `${ChatId}`);
