@@ -5,8 +5,7 @@ import { AccountNavigator } from './AccountsNavigator'
 import { AuthenticationContext } from '../authentication/authenticationContext'
 
 export default function Index() {
-  const {isAuthenticated,user}=useContext(AuthenticationContext)
-  console.log(user)
+  const {isAuthenticated}=useContext(AuthenticationContext)
   return (
     <NavigationContainer>
         {isAuthenticated ? <MainStackNavigator /> : <AccountNavigator /> }

@@ -1,4 +1,4 @@
-import { addDoc, arrayUnion, collection, doc, getDocs, onSnapshot, updateDoc } from "@firebase/firestore";
+import { addDoc, arrayUnion, batch, collection, doc, getDocs, onSnapshot, updateDoc } from "@firebase/firestore";
 import { createContext, useContext, useEffect, useState } from "react";
 import { firestoreDb } from "../../../Firebase";
 import { AuthenticationContext } from "../authentication/authenticationContext";
@@ -8,7 +8,6 @@ export const UserInfoContext = createContext();
 export const UserInfoContextProvider = ({ children }) => {
   const { user, isAuthenticated } = useContext(AuthenticationContext);
   const [localUsers, setLocalUsers] = useState([]);
-  // const [currentUser, setCurrentUser] = useState();
 
   const getFromFirestore = async () => {
     const querySnapshot = await getDocs(collection(firestoreDb, "user"));
@@ -32,27 +31,19 @@ export const UserInfoContextProvider = ({ children }) => {
   }, []);
   
 
-  const addNewConversation = async (number) => {
-    const FriendId = localUsers.find(
-      (localUser) => localUser.number === number
-    );
-    const currentUser=localUsers.find((localUser)=>localUser.number===user.phoneNumber)
-    const userDocRef = doc(firestoreDb, "user", currentUser.docId);
-    await updateDoc(userDocRef, {
-      conversations: arrayUnion(`${currentUser.number}-${FriendId.number}`),
-    })
-      .then(() => console.log("added to my conversations"))
-      .catch((e) => console.log(e));
-    
-      const FriendDocRef = doc(firestoreDb, "user", FriendId.docId);
-      await updateDoc(FriendDocRef, {
-        conversations: arrayUnion(`${currentUser.number}-${FriendId.number}`),
-      })
-        .then(() => console.log("added to friends conversations"))
-        .catch((e) => console.log(e));
-
-      return `${currentUser.number}-${FriendId.number}`
-    
+  const addNewConversation = async (friend, currentUserId) => {
+    const currentUser = localUsers.find((localUser) => localUser.number === currentUserId);
+    const batchedWrite = batch();
+    const currentUserDocRef = doc(firestoreDb, "user", currentUser.docId);
+    batchedWrite.update(currentUserDocRef, {
+      conversations: arrayUnion(`${currentUser.number}-${friend.number}`),
+    });
+    const friendDocRef = doc(firestoreDb, "user", friend.docId);
+    batchedWrite.update(friendDocRef, {
+      conversations: arrayUnion(`${currentUser.number}-${friend.number}`),
+    });
+    await batchedWrite.commit();
+    return `${currentUser.number}-${friend.number}`;
   };
 
   const addToFirestore = async (name) => {
@@ -61,13 +52,8 @@ export const UserInfoContextProvider = ({ children }) => {
       userid: user.uid,
       number: user.phoneNumber,
       conversations: [],
-      
-    })
-      .then(console.log("added to firestore"))
-      .catch((e) => console.log(e));
+    }).catch((e) => console.log(e));
   };
-
-  
 
   return (
     <UserInfoContext.Provider

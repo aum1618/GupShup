@@ -1,7 +1,6 @@
 import { useContext } from "react";
 import { ActivityIndicator } from "react-native-paper";
 import { AuthenticationContext } from "../../features/authentication/authenticationContext";
-import { Spacer } from "../../infrastructure/components/spacer/spacer";
 
 import {
   AccountBackground,
@@ -15,8 +14,6 @@ export const AccountsScreen = ({ navigation }) => {
   return (
     <AccountBackground>
       <Title>GupShup</Title>
-      
-
       <AccountContainer>
         {!isLoading ?<AuthButton
           icon="lock-open-outline"

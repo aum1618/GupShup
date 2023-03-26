@@ -11,22 +11,21 @@ import NewUserScreenNavigator from "./NewUserScreenNavigator";
 
 const Stack = createStackNavigator();
 
-export default function MainStackNavigator() {
-  const { user,isAuthenticated,fromLogin } = useContext(AuthenticationContext);
+function checkPrevUser(localUsers, uid) {
+  return localUsers.some((localUser) => localUser.userid === uid);
+}
+
+export default function MainStackNavigator({}) {
+  const { user, isAuthenticated, fromLogin } = useContext(AuthenticationContext);
   const { localUsers } = useContext(UserInfoContext);
   const [isPrevUser, setIsPrevUser] = useState(false);
 
   useEffect(() => {
-    let prevUser = false;  
-    localUsers.forEach((localUser) => {
-      if (localUser.userid === user.uid) {
-        console.log(`${localUser.name} is already a user`);
-        prevUser = true;
-      }
-    });
+    const prevUser = checkPrevUser(localUsers, user.uid);
     setIsPrevUser(prevUser);
-  }, [localUsers,isAuthenticated]);
-    return (
+  }, [localUsers, isAuthenticated]);
+
+  return (
     <Stack.Navigator screenOptions={{ headerMode: false,...TransitionPresets.SlideFromRightIOS }}>
       {!isPrevUser && fromLogin ? (
         <Stack.Screen

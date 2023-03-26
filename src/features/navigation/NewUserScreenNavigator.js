@@ -1,7 +1,5 @@
-import { View, Text } from "react-native";
 import React from "react";
 import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
-import { NavigationContainer } from "@react-navigation/native";
 import NewUserDetailsScreen from "../../screens/NewUserDetailsScreen/NewUserDetailsScreen";
 import { CameraScreen } from "../../screens/NewUserDetailsScreen/ProfilePhotoCameraScreen";
 

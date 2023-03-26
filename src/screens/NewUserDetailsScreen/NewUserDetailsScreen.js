@@ -10,60 +10,58 @@ import { firestoreDb } from "../../../Firebase";
 import { UserInfoContext } from "../../features/userInfo/UserInfoContext";
 import styled from "styled-components";
 import { View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TouchableOpacity } from "react-native";
 
-
-const AvatarContainer=styled(View)`
-align-items: center;
+const AvatarContainer = styled(View)`
+  align-items: center;
 `;
 
-export default function NewUserDetailsScreen({navigation,route}) {
-  const {setPrev}=route.params
+const NewUserDetailsScreen = React.memo(({ navigation, route }) => {
+  const { setPrev } = route.params;
   const [name, setName] = useState("");
   const { user } = useContext(AuthenticationContext);
-  const { addToFirestore,localUsers } = useContext(UserInfoContext);
-  const [photo,setPhoto]=useState(null)
+  const { addToFirestore, localUsers } = useContext(UserInfoContext);
+  const [photo, setPhoto] = useState(null);
 
-  const getPicture=async(cr=user)=>{
-
-    const photoURI= await AsyncStorage.getItem(`${cr.uid}-photo`)
-      setPhoto(photoURI)
-
-  }
-
-  useFocusEffect(
-    useCallback(() => {
-      getPicture(user);
-    }, [user])
-  );
-
+  const getPicture = useCallback(async (cr = user) => {
+    const photoURI = await AsyncStorage.getItem(`${cr.uid}-photo`);
+    setPhoto(photoURI);
+  }, []);
 
   useEffect(() => {
     console.log(localUsers);
   }, []);
 
-  const HandleContinue=()=>{
-    addToFirestore(name)
-    setPrev(true)
+  useEffect(() => {
+    getPicture();
+  }, [getPicture]);
 
-  }
+  const handleContinue = () => {
+    addToFirestore(name);
+    setPrev(true);
+  };
 
   return (
     <Wrapper style={{ alignItems: "center", justifyContent: "center" }}>
-       <AvatarContainer>
-          <TouchableOpacity onPress={()=>navigation.navigate("ProfileCamera")}>
-{!photo ?<Avatar.Icon icon='account' size={180}  />:<Avatar.Image source={{uri:photo}} size={180}  />}
+      <AvatarContainer>
+        <TouchableOpacity onPress={() => navigation.navigate("ProfileCamera")}>
+          {!photo ? (
+            <Avatar.Icon icon="account" size={180} />
+          ) : (
+            <Avatar.Image source={{ uri: photo }} size={180} />
+          )}
         </TouchableOpacity>
         <Spacer />
-        <Text>Hi {user.phoneNumber}</Text>
-        </AvatarContainer>
+        <Text>Hi {user?.phoneNumber}</Text>
+      </AvatarContainer>
       <AuthInput label="Name" onChangeText={(n) => setName(n)} />
       <Spacer size="large" />
-      <AuthButton icon="arrow-right" mode="contained" onPress={HandleContinue}>
+      <AuthButton icon="arrow-right" mode="contained" onPress={handleContinue}>
         Continue
       </AuthButton>
     </Wrapper>
   );
-}
+});
+
+export default NewUserDetailsScreen;

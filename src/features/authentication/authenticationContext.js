@@ -6,7 +6,7 @@ import {
   PhoneAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { auth } from "../../../Firebase";
 import { appOptions } from "../../../Firebase";
 export const AuthenticationContext = createContext();
@@ -15,15 +15,13 @@ export const AuthenticationContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [fromLogin, setFromLogin] = useState(false);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState();
+  const [user, setUser] = useState(null);
   const recaptchaVerifier = useRef(null);
   const firebaseConfig = appOptions;
-  const [verificationId, setVerificationId] = useState();
+  const [verificationId, setVerificationId] = useState(null);
   const [codeSent, setCodeSent] = useState(false);
 
-
-
-  const onLogin = async (phoneNumber) => {
+  const onLogin = useCallback(async (phoneNumber) => {
     try {
       setIsLoading(true);
       const phoneProvider = new PhoneAuthProvider(auth);
@@ -36,74 +34,76 @@ export const AuthenticationContextProvider = ({ children }) => {
       setIsLoading(false);
       setCodeSent(true);
     } catch (err) {
-      console.log(`Error: ${err}`);
+      console.error(`Error: ${err}`);
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const confirmCode = async (code) => {
+  const confirmCode = useCallback(async (code) => {
     try {
       setIsLoading(true);
       const credential = PhoneAuthProvider.credential(verificationId, code);
       await signInWithCredential(auth, credential);
       console.log("Phone authentication successful 👍");
       setCodeSent(false);
-      setFromLogin(true)
+      setFromLogin(true);
       setIsLoading(false);
     } catch (err) {
-      console.log(`Error: ${err}`);
+      console.error(`Error: ${err}`);
       setIsLoading(false);
       setCodeSent(false);
     }
-  };
+  }, [verificationId]);
 
-  const setLoggedUser = async () => {
+  const setLoggedUser = useCallback(async () => {
     try {
       const userValue = JSON.stringify(user);
-      await AsyncStorage.setItem(`@loggedUser`, userValue);
-      console.log(`log in user set!`);
-    } catch (e) {
-      console.log(e);
+      await AsyncStorage.setItem('@loggedUser', userValue);
+      console.log('Logged in user set!');
+    } catch (err) {
+      console.error(err);
     }
-  };
+  }, [user]);
 
-  const onLogout = () => {
+  const onLogout = useCallback(() => {
     setIsLoading(true);
     signOut(auth)
       .then(() => {
         setUser(null);
-        AsyncStorage.removeItem(`@loggedUser`);
-        console.log("no user logged in!");
+        AsyncStorage.removeItem('@loggedUser');
+        console.log('No user logged in!');
         setIsLoading(false);
       })
-      .catch((e) => {
-        setError(e.message);
+      .catch((err) => {
+        console.error(err);
+        setError(err.message);
         setIsLoading(false);
       });
-  };
+  }, []);
 
-  const getLoggedUser = async () => {
+  const getLoggedUser = useCallback(async () => {
     try {
       setIsLoading(true);
-      const JsonValue = await AsyncStorage.getItem(`@loggedUser`);
-      if (JsonValue != null) {
-        await setUser(JSON.parse(JsonValue));
-        console.log(`user set`)
-       !isPrevLoading && setIsLoading(false);
-      } else setIsLoading(false);
-    } catch (e) {
-      console.log(e);
+      const jsonValue = await AsyncStorage.getItem('@loggedUser');
+      if (jsonValue != null) {
+        setUser(JSON.parse(jsonValue));
+        console.log('User set.');
+      }
+      setIsLoading(false);
+    } catch (err) {
+      console.error(err);
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    getLoggedUser();
   }, []);
 
   useEffect(() => {
-    console.log(`user is ${user}`);
+    getLoggedUser();
+  }, [getLoggedUser]);
+
+  useEffect(() => {
+    console.log(`User is ${user?.email}`);
   }, [user]);
+
   onAuthStateChanged(auth, (user) => {
     if (user) {
       setUser(user);
@@ -111,24 +111,37 @@ export const AuthenticationContextProvider = ({ children }) => {
     }
   });
 
+  const authContextValue = useMemo(() => ({
+    isAuthenticated: !!user,
+    isLoading,
+    user,
+    error,
+    onLogin,
+    confirmCode,
+    onLogout,
+    getLoggedUser,
+    recaptchaVerifier,
+    firebaseConfig,
+    codeSent,
+    fromLogin,
+  }), [
+    isLoading,
+    user,
+    error,
+    onLogin,
+    confirmCode,
+    onLogout,
+    getLoggedUser,
+    recaptchaVerifier,
+    firebaseConfig,
+    codeSent,
+    fromLogin,
+  ]);
+
   return (
-    <AuthenticationContext.Provider
-      value={{
-        isAuthenticated: !!user,
-        isLoading,
-        user,
-        error,
-        onLogin,
-        confirmCode,
-        onLogout,
-        getLoggedUser,
-        recaptchaVerifier,
-        firebaseConfig,
-        codeSent,
-        fromLogin,
-      }}
-    >
+    <AuthenticationContext.Provider value={authContextValue}>
       {children}
     </AuthenticationContext.Provider>
+
   );
 };

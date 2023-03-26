@@ -10,6 +10,9 @@ import { child, get, onValue, ref } from "@firebase/database";
 import { db } from "../../../Firebase";
 import moment from "moment/moment";
 import { ProfilesContext } from "../../features/Profiles/ProfilesContext";
+import { useCallback } from "react";
+import { useMemo } from "react";
+import { FlatList } from "react-native";
 
 const Header = styled(View)`
   height: 15%;
@@ -29,85 +32,86 @@ const Body = styled(View)`
 `;
 
 export default function MainScreen({ navigation }) {
-  const { localUsers } = useContext(UserInfoContext);
   const { user, onLogout } = useContext(AuthenticationContext);
   const [chats, setChats] = useState([]);
-  const {getChatUrl}=useContext(ProfilesContext)
-  
+  const { getChatUrl } = useContext(ProfilesContext);
+  const { localUsers } = useContext(UserInfoContext);
 
-  const currentUser = localUsers.find(
-    (localUser) => localUser.number === user.phoneNumber
+  const currentUser = useMemo(() => {
+    return localUsers.find(
+      (localUser) => localUser.number === user.phoneNumber
+    );
+  }, [localUsers, user.phoneNumber]);
+
+  const getLastConvo = useCallback(
+    (conversation) => {
+      let lastMessage = { text: "" };
+      const messagesRef = ref(db, conversation);
+      const handleData = (snapshot) => {
+        const messageList = [];
+        snapshot.forEach((child) => {
+          messageList.push(child.val());
+        });
+
+        if (messageList.length > 0) {
+          lastMessage = messageList.reverse()[0];
+          setChats((prevChats) => {
+            const newChats = [...prevChats];
+            const chatIndex = newChats.findIndex(
+              (chat) => chat.conversation === conversation
+            );
+            newChats[chatIndex] = {
+              ...newChats[chatIndex],
+              lastConvo: lastMessage.text,
+              time: moment(lastMessage.createdAt).format("HH:mm"),
+            };
+            return newChats;
+          });
+        }
+      };
+      onValue(messagesRef, handleData);
+
+      return lastMessage;
+    },
+    [onValue, setChats]
   );
 
-  const getChat = (conversation) => {
-    console.log(conversation);
-    const [number1, number2] = conversation.split("-");
-    const otherNumber = number1 === user.phoneNumber ? number2 : number1;
-    console.log(otherNumber);
-    const otherUser = localUsers.find(
-      (localUser) => localUser.number === otherNumber
-    );
-    const lastMessage = getLastConvo(conversation);
-    const formattedTime = moment(lastMessage.createdAt).format("HH:mm");
-    const chat = {
-      name: otherUser.name,
-      conversation,
-      lastConvo: lastMessage.text,
-      time: formattedTime,
-      number:otherUser.number
-    };
-    return chat;
-  };
-  
-  const getLastConvo = (conversation) => {
-    let lastMessage = { text: "" };
-    const messagesRef = ref(db, conversation);
-    const handleData = (snapshot) => {
-      const messageList = [];
-      snapshot.forEach((child) => {
-        messageList.push(child.val());
-      });
-  
-      if (messageList.length > 0) {
-        lastMessage = messageList.reverse()[0];
-        setChats((prevChats) => {
-          const newChats = [...prevChats];
-          const chatIndex = newChats.findIndex(
-            (chat) => chat.conversation === conversation
-          );
-          newChats[chatIndex] = {
-            ...newChats[chatIndex],
-            lastConvo: lastMessage.text,
-            time: moment(lastMessage.createdAt).format("HH:mm"),
-          };
-          return newChats;
-        });
-      }
-    };
-    onValue(messagesRef, handleData);
-  
-    return lastMessage;
-  };
-  
-  
+  const getChat = useCallback(
+    (conversation) => {
+      const [number1, number2] = conversation.split("-");
+      const otherNumber = number1 === user.phoneNumber ? number2 : number1;
+      const otherUser = localUsers.find(
+        (localUser) => localUser.number === otherNumber
+      );
+      const lastMessage = getLastConvo(conversation);
+      const formattedTime = moment(lastMessage.createdAt).format("HH:mm");
+      const chat = {
+        name: otherUser.name,
+        conversation,
+        lastConvo: lastMessage.text,
+        time: formattedTime,
+        number: otherUser.number,
+      };
+      return chat;
+    },
+    [getLastConvo, localUsers, user.phoneNumber]
+  );
+
   useEffect(() => {
     if (currentUser) {
-      getChatUrl(user.phoneNumber)
-      const newChats = currentUser.conversations.map((conversation) => {
-        return getChat(conversation);
-      });
+      getChatUrl(user.phoneNumber);
+      const newChats = currentUser.conversations.map((conversation) =>
+        getChat(conversation)
+      );
       setChats(newChats);
-
     }
-  }, [localUsers, currentUser]);
+  }, [currentUser, getChat, getChatUrl, user.phoneNumber]);
 
-  useEffect(()=>{
-      chats.forEach((chat)=>{
-        getChatUrl(chat.number)
-      })
-  },[chats])
-
-  
+  useEffect(() => {
+    chats.forEach((chat) => {
+      getChatUrl(chat.number);
+    });
+  }, [chats, getChatUrl]);
 
   return (
     <>
@@ -121,21 +125,21 @@ export default function MainScreen({ navigation }) {
         />
       </Header>
       <Body>
-        <ScrollView>
-          {chats.map((chat, id) => {
-            return (
-              <ChatCard
-                key={id}
-                navigation={navigation}
-                conversationId={chat.conversation}
-                name={chat.name}
-                lastConvo={chat.lastConvo}
-                time={chat.time}
-                number={chat.number}
-              />
-            );
-          })}
-        </ScrollView>
+        <FlatList
+          data={chats}
+          keyExtractor={(chat) => chat.conversation}
+          renderItem={({ item: chat }) => (
+            <ChatCard
+              navigation={navigation}
+              conversationId={chat.conversation}
+              name={chat.name}
+              lastConvo={chat.lastConvo}
+              time={chat.time}
+              number={chat.number}
+            />
+          )}
+        />
+
         <IconButton
           icon="chat"
           mode="contained"

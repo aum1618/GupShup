@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useContext } from "react";
-import { GiftedChat, InputToolbar, Send } from "react-native-gifted-chat";
+import React, { useState, useCallback, useEffect, useContext, useMemo } from "react";
+import { GiftedChat,} from "react-native-gifted-chat";
 import { set, onValue, ref, push, off } from "firebase/database";
 import { db } from "../../../Firebase";
 import { AuthenticationContext } from "../../features/authentication/authenticationContext";
@@ -7,8 +7,6 @@ import { Wrapper } from "../../infrastructure/components/wrappper/wrapper";
 import ChatScreenHeader from "./ChatScreenHeader";
 import styled from "styled-components";
 import { ProfilesContext } from "../../features/Profiles/ProfilesContext";
-import { View } from "react-native";
-import { IconButton } from "react-native-paper";
 
 const Chat = styled(Wrapper)`
   background-color: ${(props) => props.theme.colors.bg.primary};
@@ -21,57 +19,59 @@ export function ChatScreen({ navigation, route }) {
   const { user } = useContext(AuthenticationContext);
   const { profileUrls } = useContext(ProfilesContext);
 
-  useEffect(() => {
-    const messagesRef = ref(db, `${ChatId}`);
-    const handleData = (snapshot) => {
-      const messageList = [];
-      snapshot.forEach((child) => {
-        if(child.val().user._id !== user.uid){
-          set(ref(db, `${ChatId}/${child.key}`), { ...child.val(), received: true });
-    }
-        messageList.push(child.val());
-      });
-      setMessages(messageList.reverse());
-    };
-    onValue(messagesRef, handleData);
+  const messagesRef = useMemo(() => ref(db, `${ChatId}`), [ChatId]);
+const typingRef = useMemo(() => ref(db, `typing/${ChatId}`), [ChatId]);
 
-    return () => {
-      off(messagesRef, "value", handleData);
-    };
-  }, []);
-
-  useEffect(() => {
-    const typingRef = ref(db, `typing/${ChatId}`);
-    const handleTyping = (snapshot) => {
-      if (snapshot.val() && snapshot.val().uid !== user.uid) {
-        setIsTyping(true);
-      } else {
-        setIsTyping(false);
+useEffect(() => {
+  const handleData = (snapshot) => {
+    const messageList = [];
+    snapshot.forEach((child) => {
+      if(child.val().user._id !== user.uid){
+        const messageRef = ref(db, `${ChatId}/${child.key}`);
+        set(messageRef, { ...child.val(), received: true });
       }
-    };
-    onValue(typingRef, handleTyping);
+      messageList.push(child.val());
+    });
+    setMessages(messageList.reverse());
+  };
+  onValue(messagesRef, handleData);
 
-    return () => {
-      off(typingRef, "value", handleTyping);
-    };
-  }, []);
+  return () => {
+    off(messagesRef, "value", handleData);
+  };
+}, [messagesRef, user.uid]);
 
-  const updateTyping = async (typing) => {
-    const typingRef = ref(db, `typing/${ChatId}`);
-    if (typing) {
-      await set(typingRef, { uid: user.uid });
+useEffect(() => {
+  const handleTyping = (snapshot) => {
+    if (snapshot.val() && snapshot.val().uid !== user.uid) {
+      setIsTyping(true);
     } else {
-      await set(typingRef, null);
+      setIsTyping(false);
     }
   };
+  onValue(typingRef, handleTyping);
 
-  const onInputTextChanged = (text) => {
-    if (text.length > 0) {
-      updateTyping(true);
-    } else {
-      updateTyping(false);
-    }
+  return () => {
+    off(typingRef, "value", handleTyping);
   };
+}, [typingRef, user.uid]);
+
+
+const updateTyping = useCallback(async (typing) => {
+  if (typing) {
+    await set(typingRef, { uid: user.uid });
+  } else {
+    await set(typingRef, null);
+  }
+}, [typingRef, user.uid]);
+
+const onInputTextChanged = useCallback((text) => {
+  if (text.length > 0) {
+    updateTyping(true);
+  } else {
+    updateTyping(false);
+  }
+}, [updateTyping]);
 
   const onSend = useCallback((messages = []) => {
     updateTyping(false);
@@ -104,7 +104,7 @@ export function ChatScreen({ navigation, route }) {
         onInputTextChanged={onInputTextChanged}
         user={{
           _id: user.uid,
-          avatar: profileUrls[user.phoneNumber],
+          avatar: profileUrls[user.phoneNumber] ? profileUrls[user.phoneNumber] : require("../../mockdata/profile.avif"),
           name: chatName,
         }}
         isTyping={isTyping}

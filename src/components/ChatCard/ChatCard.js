@@ -1,9 +1,9 @@
-import { View, Image } from "react-native";
-import React from "react";
 import { Card } from "react-native-paper";
+import React from "react";
+import styled from "styled-components/native";
 import { Text } from "../../infrastructure/components/typography/Text";
-import styled from "styled-components";
 import ProfilePhoto from "./ProfilePhoto";
+import { View } from "react-native";
 
 const Message = styled(Text)`
   color: ${(props) => props.theme.colors.text.secondary};
@@ -16,7 +16,7 @@ const ChatContent = styled(Card.Content)`
   align-items: center;
   margin: 10px;
 `;
-export const Profile = styled(Image)`
+export const Profile = styled.Image`
   height: 64px;
   width: 64px;
   border-radius: 32px;
@@ -27,13 +27,13 @@ const MessageView = styled(View)`
   margin-right: 10px;
 `;
 
-export default function ChatCard({navigation,conversationId,name,lastConvo,time,number}) {
-  
-  
-  
-  return (
+function ChatCard({ navigation, conversationId, name, lastConvo, time, number }) {
+  const handlePress = React.useCallback(() => {
+    navigation.navigate("Chat", { ChatId: conversationId, chatName: name, number: number });
+  }, [navigation, conversationId, name, number]);
 
-    <Chat mode="contained" onPress={()=>navigation.navigate("Chat",{ChatId:conversationId,chatName:name,number:number})} >
+  return (
+    <Chat mode="contained" onPress={handlePress}>
       <ChatContent>
         <ProfilePhoto number={number} size={64} />
         <MessageView>
@@ -49,3 +49,5 @@ export default function ChatCard({navigation,conversationId,name,lastConvo,time,
     </Chat>
   );
 }
+
+export default React.memo(ChatCard);
